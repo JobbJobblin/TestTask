@@ -1,0 +1,23 @@
+[
+    {
+        "ID": 1,
+        "Title": "boop",
+        "Author": "kosha",
+        "Year": "Unknown Year",
+        "Status": "Available"
+    },
+    {
+        "ID": 2,
+        "Title": "bep",
+        "Author": "kosha",
+        "Year": "Unknown Year",
+        "Status": "Available"
+    },
+    {
+        "ID": 3,
+        "Title": "basdasdoop",
+        "Author": "kosha",
+        "Year": "Unknown Year",
+        "Status": "Taken"
+    }
+]
