@@ -1,9 +1,9 @@
 import json
 
 class Book_creator:
-
-    def __init__(self, title="", author="", year=None, filepath = ""):
-
+    """Класс для создания новых книг."""
+    def __init__(self, title: str ="", author: str ="", year: int|str|None = None, filepath: str = ""):
+        """Инициализирует объект Book_creator."""
         try:
             self.Assign_ID(filepath)
 
@@ -32,7 +32,8 @@ class Book_creator:
         except ValueError as e:
             print(f"Ошибка: {e}")
 
-    def Assign_ID(self, filepath):
+    def Assign_ID(self, filepath) -> None:
+        """Присваивает уникальный ID книге."""
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
                 try:
@@ -44,10 +45,11 @@ class Book_creator:
         except FileNotFoundError:
             self.ID = 1
 
-    def __del__(self):
+    def __del__(self) -> None:
+        """Освобождает память."""
         print("Память освобождена.")
 
-    def Saviour(self, filepath):
+    def Saviour(self, filepath: str) -> bool:
         """Сохраняет книгу в JSON-файл с латинскими ключами."""
 
         print(
@@ -72,7 +74,7 @@ class Book_creator:
                         if any(book['author'] == self.Author and book['title'] == self.Title and book[
                             'year'] == self.Year for book in data):
                             print("Эта книга уже есть в библиотеке. Попробуйте другую.")
-                            return # Возвращаем в меню
+                            return False # Возвращаем в меню
 
                         # Создаем словарь с латинскими ключами
                         book_data = {

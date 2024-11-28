@@ -4,27 +4,30 @@ import json
 
 
 class Book_search:
-  def __init__(self, filepath):
+  """Класс для работы с библиотекой книг (Поиск, статус, удаление)."""
+  def __init__(self, filepath: str):
     self.filepath = filepath
     self.load_books()
 
-  def load_books(self):
+  def load_books(self) -> None:
+    """Загружает книги из JSON-файла."""
     try:
       with open(self.filepath, 'r', encoding='utf-8') as f:
-        self.books = [Book(book_data) for book_data in json.load(f)]
+        self.books: list[Book] = [Book(book_data) for book_data in json.load(f)]
     except (FileNotFoundError, json.JSONDecodeError) as e:
       print(f"Ошибка при загрузке библиотеки: {e}")
-      self.books = []
+      self.books: list[Book] = []
 
-  def save_books(self):
+  def save_books(self) -> None:
     try:
       with open(self.filepath, 'w') as f:
-        json.dump([book.__dict__ for book in self.books], f, indent=4)
+        json.dump([book.__dict__ for book in self.books], f, indent=4, ensure_ascii=False)
     except IOError as e:
       print(f"Произошла ошибка при сохранении библиотеки: {e}")
 
-  def search_books(self, ID = "", author="", title="", year=""):
-    results = []
+  def search_books(self, ID: int = "", author: str ="", title: str="", year: int | str | None ="") -> list[Book]:
+    """Ищет книги по критериям."""
+    results: list[Book] = []
     for book in self.books:
       if ID and str(book.ID) != str(ID):
         continue
@@ -37,14 +40,16 @@ class Book_search:
       results.append(book)
     return results
 
-  def get_book_by_id(self, book_id):
+  def get_book_by_id(self, book_id: int) -> None:
+    """Возвращает книгу по ID."""
     for book in self.books:
       if book.ID == book_id:
         return book
     return None
 
-  def change_book_status(self, book_id):
-    book = self.get_book_by_id(book_id)
+  def change_book_status(self, book_id: int) -> None:
+    """Изменяет статус книги (В наличии/Выдана). Автоматически присваивает статус "Выдана", если статус не "В наличии" или "Выдана"."""
+    book: Book | None = self.get_book_by_id(book_id)
     if book:
       if book.status != "В наличии" and book.status != "Выдана":
         book.status = "Выдана"
@@ -78,8 +83,9 @@ class Book_search:
     else:
       print(f"Книга с ID {book_id} не найдена.")
 
-  def delete_book(self, book_id):
-    accomplished = False
+  def delete_book(self, book_id: int) -> None:
+    """Удаляет книгу."""
+    accomplished: bool = False
     for book in self.books:
       if book.ID == book_id:
         while True:

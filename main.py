@@ -5,6 +5,7 @@ from Atonnofpies.book_creator import Book_creator
 
 
 def main():
+    """Главная функция программы."""
     filepath = "library.json"
     library = Book_search(filepath)
 
@@ -20,13 +21,13 @@ def main():
         choice = input("Что вы хотите сделать: \n")
 
         if choice == '1':
-            success = False  # Флаг успешного выполнения
+            success: bool = False  # Флаг успешного выполнения
             while not success:
                 try:
-                    author = input("Введите ФИО автора (опционально): \n")
-                    title = input("Введите название книги (опционально): \n")
-                    year_str = input("Введите год (опционально): \n")  # Ввод как строка для обработки
-                    year = None
+                    author: str = input("Введите ФИО автора (опционально): \n")
+                    title: str = input("Введите название книги (опционально): \n")
+                    year_str: str = input("Введите год (опционально): \n")  # Ввод как строка для обработки
+                    year: int|None|str = None
                     try:
                         year = int(year_str.strip())  # Преобразование в целое число только если строка не пустая
                     except:
@@ -70,20 +71,20 @@ def main():
                 print("Библиотека пуста.")
 
         elif choice == '3':
-            success = False
+            success: bool = False
             while not success:
                 try:
-                    id_str = input("Введите ID книги в нашей библиотеке (опционально): \n")
-                    ID = None
+                    id_str: str = input("Введите ID книги в нашей библиотеке (опционально): \n")
+                    ID: int|None = None
                     if id_str.strip():  # Проверка на пустую строку
                         try:
                             ID = int(id_str.strip()) # Преобразование в целое число только если строка не пустая
                         except:
                             raise ValueError ("Неверный формат поля 'ID'")
-                    author = input("Введите ФИО автора (опционально): \n")
-                    title = input("Введите название книги (опционально): \n")
-                    year_str = input("Введите год (опционально): \n")  # Ввод как строка для обработки
-                    year = None
+                    author: str = input("Введите ФИО автора (опционально): \n")
+                    title: str = input("Введите название книги (опционально): \n")
+                    year_str: str = input("Введите год (опционально): \n")  # Ввод как строка для обработки
+                    year: str|int|None = None
                     if year_str.strip() and year_str.strip() != "Год неизвестен":  # Проверка на пустую строку
                         try:
                             year = int(year_str.strip()) # Преобразование в целое число только если строка не пустая
@@ -124,12 +125,12 @@ def main():
                         else:
                             print("Пожалуйста, введите Да или Нет. \n")
         elif choice == '4':
-            book_id = int(input("Введите ID книги: \n"))
+            book_id: int = int(input("Введите ID книги: \n"))
             library.change_book_status(book_id)
             library = Book_search(filepath)
 
         elif choice == '5':
-            book_id = int(input("Введите ID книги: \n"))
+            book_id: int = int(input("Введите ID книги: \n"))
             library.delete_book(book_id)
             library = Book_search(filepath)
 
