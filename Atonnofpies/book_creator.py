@@ -1,106 +1,108 @@
 import json
-import os
 
 class Book_creator:
-    """Базовый класс для всех книг библиотеки"""
 
-    def __init__(self, title="", author="", year=None):
+    def __init__(self, title="", author="", year=None, filepath = ""):
 
-        self.Assign_ID()
-
-        if title == "":
-            self.Title = "Unknown Title"
-        elif not isinstance(title, str):
-            raise ValueError("Внимание! Введён неправильный формат данных в поле 'название книги'. Попробуйте ещё раз!")
-        else:
-            self.Title = title
-
-        if author == "":
-            self.Author = "Unknown Author"
-        elif not isinstance(author, str):
-            raise ValueError("Внимание! Введён неправильный формат данных в поле 'автор'. Попробуйте ещё раз!")
-        else:
-            self.Author = author
-
-        if year == None:
-            self.Year = "Unknown Year"
-        elif not isinstance(year, int):
-            raise ValueError("Внимание! Введён неправильный формат данных в поле 'год'. Попробуйте ещё раз!")
-        else:
-            self.Year = year
-
-        self.Status = "Available"
-
-    def Assign_ID(self, filepath = f"{os.path.dirname(os.getcwd())}\library.json"):
         try:
-            with open(filepath, 'r') as f:
+            self.Assign_ID(filepath)
+
+            if title == "":
+                self.Title = "Без названия"
+            elif not isinstance(title, str):
+                raise ValueError("Неверный формат поля 'Наименование'.")
+            else:
+                self.Title = title
+
+            if author == "":
+                self.Author = "Неизвестный автор"
+            elif not isinstance(author, str):
+                raise ValueError("Неверный формат поля 'Автор'.")
+            else:
+                self.Author = author
+
+            if year == "" or year == None:
+                self.Year = "Год неизвестен"
+            elif not isinstance(year, int):
+                raise ValueError("Неверный формат поля 'Год'.")
+            else:
+                self.Year = year
+
+            self.Status = "В наличии"
+        except ValueError as e:
+            print(f"Ошибка: {e}")
+
+    def Assign_ID(self, filepath):
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
                     self.ID = max(book["ID"] for book in data) + 1 if data else 1
-                    print(f'ID is {self.ID}')
                 except json.JSONDecodeError as e:
                     print(f"Ошибка json - {e}")
                     self.ID = 1
-                    print(f'ID is {self.ID}')
         except FileNotFoundError:
-            print(2)
             self.ID = 1
-            print(f'ID is {self.ID}')
 
     def __del__(self):
-        print("Book removal is complete.")
-        # print("Destructor approaches you and says: 'My job here is done!'")
-        # print("You feel your urge for random acts of violence is sated.")
-        # print("At least for now...")
+        print("Память освобождена.")
 
-    def Saviour(self, filepath = f"{os.path.dirname(os.getcwd())}\library.json"):
+    def Saviour(self, filepath):
+        """Сохраняет книгу в JSON-файл с латинскими ключами."""
 
         print(
-            "You want to save the book with the following parameters: \n"
-            f"Title: {self.Title}\n"
-            f"Author: {self.Author}\n"
-            f"Year: {self.Year}\n"
-            "Correct?"
+            "Вы хотите сохранить книгу со следующими параметрами: \n"
+            f"Название: {self.Title}\n"
+            f"Автор: {self.Author}\n"
+            f"Год: {self.Year}\n"
+            "Верно?"
         )
 
-        while True:
-            User_Answer = input("Yes or No?\n")
-            if User_Answer.lower() == "yes":
+        while True:  # Более чистый цикл while
+            user_answer = input("Введите, пожалуйста, ваш ответ (Да/Нет)\n").lower()
+            if user_answer == "да":
                 try:
-                    with open(filepath, 'r+') as f:
+                    with open(filepath, 'r+', encoding='utf-8') as f:
                         try:
                             data = json.load(f)
-                        # Если файл пустой.
                         except json.JSONDecodeError:
                             data = []
 
-                        if any(book['Author'] == self.Author and book['Title'] == self.Title and book['Year'] == self.Year for book in data):
-                            print("We already have this book. Our superiors told us to keep only a single copy of every book. This is... 'for your convinience'. Sorry. Go on, try another one!")
-                            break
-                        data.append(self.__dict__)
-                        f.seek(0)
-                        json.dump(data, f, indent=4)
-                        print(data)
+                        # Проверка на дубликаты
+                        if any(book['author'] == self.Author and book['title'] == self.Title and book[
+                            'year'] == self.Year for book in data):
+                            print("Эта книга уже есть в библиотеке. Попробуйте другую.")
+                            return # Возвращаем в меню
 
-                # Создание файла, если его нет.
+                        # Создаем словарь с латинскими ключами
+                        book_data = {
+                            "ID": self.ID,
+                            "title": self.Title,
+                            "author": self.Author,
+                            "year": self.Year,
+                            "status": self.Status
+                        }
+                        data.append(book_data)
+
+                        f.seek(0)  # Перемещаем курсор в начало файла
+                        json.dump(data, f, indent=4, ensure_ascii=False)  # ensure_ascii=False для кириллицы
+                        f.truncate()  # Удаляем остатки старого содержимого
+
+                    print("Сохранено.")
+                    print(f"Ваша книга лежит в {filepath}")
+                    return True  # Возвращаем True, если сохранение успешно
+
                 except FileNotFoundError:
-                    with open(filepath, 'w') as f:
-                        json.dump([self.__dict__], f, indent=4)
-                        data.append(self.__dict__)
-                        print(data)
-                print("Saving process is complete.")
-                print(f"File is at {filepath}")
-                return True
-            elif User_Answer.lower() == "no":
-                print("Saving process aborted.")
-                return False
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        json.dump([{'ID': self.ID, 'title': self.Title, 'author': self.Author, 'year': self.Year,
+                                    'status': self.Status}], f, indent=4, ensure_ascii=False)
+                    print("Сохранено.")
+                    print(f"Ваша книга лежит в {filepath}")
+                    return True  # Возвращаем True, если сохранение успешно
+
+            elif user_answer == "нет":
+                print("Процесс сохранения отменён.")
+                return False  # Возвращаем False, если сохранение отменено
+
             else:
-                print("It's a yes or no question. Come on, you can handle it.")
-
-
-try:
-    SmolPotat = Book_creator(title="boop", author="kosha",) #year="every year")
-    SmolPotat.Saviour()
-    # SmolPotat.invoke_book()
-except ValueError as e:
-    print(e)
+                print("Нужно написать 'Да' или 'Нет'.")

@@ -1,152 +1,103 @@
+from Atonnofpies.book_book import Book
+
 import json
-import os
+
 
 class Book_search:
+  def __init__(self, filepath):
+    self.filepath = filepath
+    self.load_books()
 
-    def __init__(self):
-        print("poop")
+  def load_books(self):
+    try:
+      with open(self.filepath, 'r', encoding='utf-8') as f:
+        self.books = [Book(book_data) for book_data in json.load(f)]
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+      print(f"Ошибка при загрузке библиотеки: {e}")
+      self.books = []
 
-    def track_book(self, filepath=f"{os.path.dirname(os.getcwd())}\library.json", Author="", Title="", Year=""):
-        try:
-            with open(filepath, 'r') as f:
-                data = json.load(f)
-                found_books = []
-                for book in data:
-                    if Author and book['Author'].lower() != Author.lower():
-                        continue
-                    if Title and book['Title'].lower() != Title.lower():
-                        continue
-                    if Year and book['Year'] != str(Year):  # Преобразуем Year в строку для сравнения
-                        continue
-                    found_books.append(book)
+  def save_books(self):
+    try:
+      with open(self.filepath, 'w') as f:
+        json.dump([book.__dict__ for book in self.books], f, indent=4)
+    except IOError as e:
+      print(f"Произошла ошибка при сохранении библиотеки: {e}")
 
-                if found_books:
-                    print("We have found...:")
-                    for book in found_books:
-                        print(
-                            f"ID: {book['ID']}, Title: {book['Title']}, Author: {book['Author']}, Year: {book['Year']}")
-                else:
-                    print("None of our books match your description. You should brink one to us!")
-        except FileNotFoundError:
-            print("There's no library. Which is weird...")
-        except json.JSONDecodeError:
-            print("Can't read library file. Can't. Read. Library. That's some extraordinary level of irony.")
+  def search_books(self, ID = "", author="", title="", year=""):
+    results = []
+    for book in self.books:
+      if ID and str(book.ID) != str(ID):
+        continue
+      if author and book.author.lower() != author.lower():
+        continue
+      if title and book.title.lower() != title.lower():
+        continue
+      if year and str(book.year) != str(year):
+        continue
+      results.append(book)
+    return results
 
-        User_Task = input('What do you want to do with it?\n'
-            'Available commands:\n'
-            'Status\n'
-            'Delete\n'
-              )
+  def get_book_by_id(self, book_id):
+    for book in self.books:
+      if book.ID == book_id:
+        return book
+    return None
 
+  def change_book_status(self, book_id):
+    book = self.get_book_by_id(book_id)
+    if book:
+      if book.status != "В наличии" and book.status != "Выдана":
+        book.status = "Выдана"
+      current_status = print(f"Текущий статус книги {book.status}.")
+      if book.status == "В наличии":
         while True:
-            if User_Task.lower() == "status":
-                self.StatusBook()
-                return
-            elif User_Task.lower() == "delete":
-                self.DeleteBook()
-                return
-            else:
-                User_Task = input("Just write the word 'status' or 'delete'. Please...\n")
+          retrieve = input("Вы хотите взять эту книгу? (Да/Нет) ")
+          if retrieve.lower() == "да":
+            book.status = "Выдана"
+            self.save_books()
+            print("Держите. Не забудьте вернуть её.")
+            break
+          elif retrieve.lower() == "нет":
+            print("Ну и пожалуйста. Не очень-то и хотелось.")
+            break
+          else:
+            print("Нужно написать 'Да' или 'Нет'.")
+      elif book.status == "Выдана":
+        while True:
+          retrieve = input("Вы хотите вернуть книгу? (Да/Нет) ")
+          if retrieve.lower() == "да":
+            book.status = "В наличии"
+            self.save_books()
+            print("Спасибо, что вернули её. Мне её не хватало.")
+            break
+          elif retrieve.lower() == "нет":
+            print("Хорошо. Пусть пока ещё полежит у вас.")
+            break
+          else:
+            print("Нужно написать 'Да' или 'Нет'.")
+    else:
+      print(f"Книга с ID {book_id} не найдена.")
 
-    @staticmethod
-    def load_from_file(book_id = "", filepath=f"{os.path.dirname(os.getcwd())}\library.json", book_author = "", book_title = "", book_year = ""):
-        """Загружает книгу из JSON-файла по ID."""
-        try:
-            with open(filepath, 'r') as f:
-                try:
-                    data = json.load(f)
-                    matching_books = []
-                    for book_data in data:
-                        match = True
-                        if book_id:
-                            match = match and (book_data['ID'] == int(book_id))
-                        if book_author:
-                            match = match and (book_data['Author'] == book_author)
-                        if book_title:
-                            match = match and (book_data['Title'] == book_title)
-                        if book_year:
-                            match = match and (book_data['Year'] == book_year)
-                        if match:
-                            book = Book()
-                            book.__dict__.update(book_data)
-                            matching_books.append(book)
-                    return matching_books  # Возвращаем список книг
-                except json.JSONDecodeError:
-                    return None
-        except FileNotFoundError:
-            return None
+  def delete_book(self, book_id):
+    accomplished = False
+    for book in self.books:
+      if book.ID == book_id:
+        while True:
+          exit = input(f"Вы хотите удалить {book.title} автора {book.author}, написанную в {book.year} году. (Да/Нет) \n")
+          if exit.lower() == "да":
+            self.books = [book for book in self.books if book.ID != book_id]
+            self.save_books()
+            print(f"Книга с ID {book_id} удалена.")
+            accomplished = True
+            break
+          elif exit.lower() == "нет":
+            accomplished = True
+            print("Возвращаю в меню.")
+            break
+          else:
+            print("Пожалуйста, введите Да или Нет. \n")
 
-    def StatusBook(self, filepath = f"{os.path.dirname(os.getcwd())}\library.json"):
-
-        print(f"The book is {self.Status} now")
-
-        if self.Status == "Available":
-            User_Task = input ("Do you want to take it? (Yes/No)")
-
-            while True:
-                if User_Task.lower() == "yes":
-                    self.Status = "Taken"
-                    self.save_to_file(filepath)
-                    print(f"The book is {self.Status} now")
-                    return
-                elif User_Task.lower() == "no":
-                    print("Fine.")
-                    return
-                else:
-                    User_Task = input("It's a yes or no question. Type 'yes' or 'no'.\n")
-
-        else:
-            User_Task = input ("Do you want to return the book? (Yes/No)")
-
-            while True:
-                if User_Task.lower() == "yes":
-                    self.Status = "Available"
-                    self.save_to_file(filepath)
-                    print(f"The book is {self.Status} now")
-                    return
-                elif User_Task.lower() == "no":
-                    print("Fine.")
-                    return
-                else:
-                    User_Task = input("It's a yes or no question. Type 'yes' or 'no'.\n")
-
-    def save_to_file(self, filepath = f"{os.path.dirname(os.getcwd())}\library.json"):
-        try:
-            with open(filepath, 'r+') as f:
-                try:
-                    data = json.load(f)
-                except json.JSONDecodeError:
-                    data = []
-
-                # Находим книгу и меняем ее статус
-                for book_data in data:
-                    if book_data['ID'] == self.ID:
-                        book_data['Status'] = self.Status  # Обновляем статус
-                        break  # Выходим из цикла после обновления
-
-                f.seek(0)
-                json.dump(data, f, indent=4)
-                f.truncate()
-        except FileNotFoundError:
-            print("File not found.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-
-
-
-    def DeleteBook(self):
-        print("The book has been removed. ")
-
-
-
-    def Asking_Alexandria(self):
-        print("")
-
-
-
-
-
-
-
-coursor = Book_search()
+      else:
+        continue
+    if not accomplished:
+      print(f"Книга с ID {book_id} не найдена.")
